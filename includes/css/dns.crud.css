@@ -1,0 +1,10 @@
+/* fix button group wrap within tables */
+.localizedbootstrap .nowrap .btn-group {
+  display: flex;
+}
+
+.localizedbootstrap .modal {
+  overflow-y: scroll;
+}
+
+#MessageBox {}

@@ -1,0 +1,315 @@
+<div ng-app="DNSManagerApp" class="localizedbootstrap">
+  <h2>Wordpress DNS Manager by DigitalPixies</h2>
+
+  <!-- MessageBox -->
+  <div id="MessageBox"></div>
+
+  <table class="table" ng-controller="DNSManagerListControl" id="DNSManagerListControl">
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Host</th>
+        <th>Record Type</th>
+        <th>Destination (IP, HOSTNAME, SUBDOMAIN)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="(ID, DNSEntry) in DNSEntries">
+        <td class="nowrap">
+          <!-- Split button -->
+          <div class="btn-group">
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#EditDNSRecord" data-id="{{ID}}">
+                Edit
+              </button>
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+              </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#" ng-click="DeleteClicked(ID)">Delete</a></li>
+            </ul>
+          </div>
+        </td>
+        <td>
+          {{DNSEntry.host}}
+        </td>
+        <td>
+          {{DNSEntry.type}}
+        </td>
+        <td>
+          {{GetDestination(DNSEntry)}}
+        </td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>
+          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#AddDNSRecord">
+              Add
+            </button>
+        </th>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+      <tr>
+        <th colspan="4">
+          <div class="btn-group">
+            <button type="button" class="btn btn-default" id="ExportButton">
+                Export
+              </button>
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+              </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#" data-toggle="modal" data-target="#ViewBindFile" data-id="123">View on screen</a></li>
+            </ul>
+          </div>
+          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#SystemCheck">System Check</button>
+          <button type="button" class="btn btn-default" id="Reload" ng-click="Reload()">Reload from file</button>
+          <button type="button" class="btn btn-danger" id="DeleteDNSFile">Delete file</button>
+
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary" id="SaveToFile">Save to file</button>
+            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+              </button>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="#" id="SaveAndRestart">Save and Restart</a></li>
+            </ul>
+          </div>
+
+        </th>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Add Record -->
+  <div class="modal fade DNSCrudModal" id="AddDNSRecord" tabindex="-1" role="dialog" aria-labelledby="AddDNSRecordTitle" aria-hidden="true" ng-controller="AddDNSRecord" ng-submit="submit()">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form>
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="AddDNSRecordTitle">Add DNS Record</h4>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="AddDNSRecordHost">Host</label>
+              <input type="text" class="form-control" id="AddDNSRecordHost" name="host" placeholder="www.domainname.tld" ng-model="addui.host">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordType">Record Type</label>
+              <select class="form-control" id="AddDNSRecordType" name="type" ng-model="addui.type">
+              <option>IN CNAME</option>
+              <option>IN A</option>
+              <option>IN SOA</option>
+              <option>IN MX</option>
+              <option>IN NS</option>
+            </select>
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordPriority">Priority</label>
+              <input type="text" class="form-control" id="AddDNSRecordPriority" name="priority" placeholder="10" ng-model="addui.priority">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordDestinationDomain">Destination</label>
+              <input type="text" class="form-control" id="AddDNSRecordDestinationDomain" name="destination_domain" placeholder="www.domain-name.com or www" ng-model="addui.destination_domain">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordDestinationIP">Destination</label>
+              <input type="text" class="form-control" id="AddDNSRecordDestinationIP" name="destination_ip" placeholder="xxx.xxx.xxx.xxx" ng-model="addui.destination_ip">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordPrimaryNS">Primary Name Server</label>
+              <input type="text" class="form-control" id="AddDNSRecordPrimaryNS" name="primary_ns" placeholder="ns.domain-name.com." ng-model="addui.primary_ns">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordDomainEmail">Domain Email</label>
+              <input type="text" class="form-control" id="AddDNSRecordDomainEmail" name="domain_email" placeholder="email.address.com." ng-model="addui.domain_email">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordSerial">Serial</label>
+              <input type="text" class="form-control" id="AddDNSRecordSerial" name="serial" placeholder="2015123001" ng-model="addui.serial">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordRefresh">Refresh</label>
+              <input type="text" class="form-control" id="AddDNSRecordRefresh" name="refresh" placeholder="1200" ng-model="addui.refresh">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordRetry">Retry</label>
+              <input type="text" class="form-control" id="AddDNSRecordRetry" name="retry" placeholder="600" ng-model="addui.retry">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordExpire">Expire</label>
+              <input type="text" class="form-control" id="AddDNSRecordExpire" name="expire" placeholder="1209600" ng-model="addui.expire">
+            </div>
+            <div class="form-group">
+              <label for="AddDNSRecordNegativeResponseTTL">Negative Response TTL</label>
+              <input type="text" class="form-control" id="AddDNSRecordNegativeRespponseTTL" name="negative_response_ttl" placeholder="3600" ng-model="addui.negative_response_ttl">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <input type="submit" class="btn btn-primary" value="Add to session" />
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Record -->
+  <div class="modal fade DNSCrudModal" id="EditDNSRecord" tabindex="-1" role="dialog" aria-labelledby="EditDNSRecordTitle" aria-hidden="true" ng-controller="EditDNSRecord" ng-submit="submit()">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form>
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="EditDNSRecordTitle">Edit DNS Record</h4>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="EditDNSRecordHost">Host</label>
+              <input type="text" class="form-control" id="EditDNSRecordHost" name="host" placeholder="www.domainname.tld" ng-model="editui.host">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordType">Record Type</label>
+              <select disabled="disabled" class="form-control" id="EditDNSRecordType" name="type" ng-model="editui.type">
+              <option>IN CNAME</option>
+              <option>IN A</option>
+              <option>IN SOA</option>
+              <option>IN MX</option>
+              <option>IN NS</option>
+            </select>
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordPriority">Priority</label>
+              <input type="text" class="form-control" id="EditDNSRecordPriority" name="priority" placeholder="10" ng-model="editui.priority">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordDestinationDomain">Destination</label>
+              <input type="text" class="form-control" id="EditDNSRecordDestinationDomain" name="destination_domain" placeholder="www.domain-name.com or www" ng-model="editui.destination_domain">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordDestinationIP">Destination</label>
+              <input type="text" class="form-control" id="EditDNSRecordDestinationIP" name="destination_ip" placeholder="xxx.xxx.xxx.xxx" ng-model="editui.destination_ip">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordPrimaryNS">Primary Name Server</label>
+              <input type="text" class="form-control" id="EditDNSRecordPrimaryNS" name="primary_ns" placeholder="ns.domain-name.com." ng-model="editui.primary_ns">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordDomainEmail">Domain Email</label>
+              <input type="text" class="form-control" id="EditDNSRecordDomainEmail" name="domain_email" placeholder="email.address.com." ng-model="editui.domain_email">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordSerial">Serial</label>
+              <input type="text" class="form-control" id="EditDNSRecordSerial" name="serial" placeholder="2015123001" ng-model="editui.serial">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordRefresh">Refresh</label>
+              <input type="text" class="form-control" id="EditDNSRecordRefresh" name="refresh" placeholder="1200" ng-model="editui.refresh">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordRetry">Retry</label>
+              <input type="text" class="form-control" id="EditDNSRecordRetry" name="retry" placeholder="600" ng-model="editui.retry">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordExpire">Expire</label>
+              <input type="text" class="form-control" id="EditDNSRecordExpire" name="expire" placeholder="1209600" ng-model="editui.expire">
+            </div>
+            <div class="form-group">
+              <label for="EditDNSRecordNegativeResponseTTL">Negative Response TTL</label>
+              <input type="text" class="form-control" id="EditDNSRecordNegativeRespponseTTL" name="negative_response_ttl" placeholder="3600" ng-model="editui.negative_response_ttl">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <input type="submit" class="btn btn-primary" value="Save to session" />
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Bind File -->
+  <div class="modal fade DNSCrudModal" id="ViewBindFile" tabindex="-1" role="dialog" aria-labelledby="ViewBindFileTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form>
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="ViewBindFileTitle">Bind File Contents</h4>
+          </div>
+          <div class="modal-body">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SystemCheck -->
+  <span id="SystemCheckControl" ng-controller="CheckSystemControl">
+<div class="modal fade" id="SystemCheck">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  <h4 class="modal-title">System Check</h4>
+</div>
+<div class="modal-body">
+  {{SystemCheckResult.HTML}}
+
+  <ul ng-repeat="(index, entry) in SystemCheckResult.details | orderBy:['weight']">
+    <li>
+      <div class="alert alert-{{entry.alert_type}}" role="alert" data-toggle="collapse" data-target="#CheckSystemEntryCollapsible-{{index}}" aria-expanded="false" aria-controls="CheckSystemEntryCollapsible-{{index}}" ng-switch="entry.alert_type">
+        <p>
+          <span ng-switch-when="success" class="glyphicon glyphicon-ok-sign" aria-hidden="true"></span>
+          <span ng-switch-when="warning" class="glyphicon glyphicon-alert" aria-hidden="true"></span>
+          <span ng-switch-when="info" class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+          <span ng-switch-when="danger" class="glyphicon glyphicon-remove-sign" aria-hidden="true"></span> &nbsp;{{entry.info}}
+        </p>
+        <p>
+          <div class="collapse" id="CheckSystemEntryCollapsible-{{index}}">
+            <div class="well" ng-bind-html="entry.result | trustAsHTML">
+            </div>
+          </div>
+        </p>
+      </div>
+    </li>
+  </ul>
+
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+</div>
+</div>
+</div>
+</div>
+</span>
+
+<!-- ConfirmDialog -->
+<div class="modal fade" id="ConfirmDialog" tabindex="-1" role="dialog" aria-labelledby="ConfirmDialogTitle" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form>
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="ConfirmDialogTitle">Confirm Action</h4>
+        </div>
+        <div class="modal-body">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+</div>
